@@ -24,6 +24,9 @@
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^0.0.39",
+    "@ai-sdk/google": "^2.0.17",
+    "@ai-sdk/mistral": "^2.0.17",
+    "@ai-sdk/openai": "^2.0.42",
     "@codemirror/autocomplete": "^6.17.0",
     "@codemirror/commands": "^6.6.0",
     "@codemirror/lang-cpp": "^6.0.2",

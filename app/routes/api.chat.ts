@@ -1,7 +1,7 @@
 import { type ActionFunctionArgs } from '@remix-run/cloudflare';
 import { MAX_RESPONSE_SEGMENTS, MAX_TOKENS } from '~/lib/.server/llm/constants';
 import { CONTINUE_PROMPT } from '~/lib/.server/llm/prompts';
-import { streamText, type Messages, type StreamingOptions } from '~/lib/.server/llm/stream-text';
+import { streamTextMultiModel, type Messages } from '~/lib/.server/llm/stream-text-multi';
 import SwitchableStream from '~/lib/.server/llm/switchable-stream';
 import { requireAuth, createSupabaseServerClient } from '~/lib/supabase.server';
 import type { Database } from '~/types/database';
@@ -38,43 +38,69 @@ async function chatAction({ context, request }: ActionFunctionArgs) {
   const stream = new SwitchableStream();
 
   try {
-    const options: StreamingOptions = {
-      toolChoice: 'none',
-      onFinish: async ({ text: content, finishReason, usage }) => {
-        const tokensUsed = (usage?.promptTokens || 0) + (usage?.completionTokens || 0);
+    const onFinish = async ({ text: content, finishReason, usage }: any) => {
+      const tokensUsed = (usage?.promptTokens || 0) + (usage?.completionTokens || 0);
 
-        await (supabase.rpc as any)('consume_tokens', {
-          p_user_id: session.user.id,
-          p_tokens: Math.ceil(tokensUsed / 1000),
-          p_model_used: 'claude-3-sonnet',
-          p_prompt_tokens: usage?.promptTokens || 0,
-          p_completion_tokens: usage?.completionTokens || 0,
-        });
+      await (supabase.rpc as any)('consume_tokens', {
+        p_user_id: session.user.id,
+        p_tokens: Math.ceil(tokensUsed / 1000),
+        p_model_used: 'multi-model',
+        p_prompt_tokens: usage?.promptTokens || 0,
+        p_completion_tokens: usage?.completionTokens || 0,
+      });
 
-        if (finishReason !== 'length') {
-          return stream.close();
-        }
+      if (finishReason !== 'length') {
+        return stream.close();
+      }
 
-        if (stream.switches >= MAX_RESPONSE_SEGMENTS) {
-          throw Error('Cannot continue message: Maximum segments reached');
-        }
+      if (stream.switches >= MAX_RESPONSE_SEGMENTS) {
+        throw Error('Cannot continue message: Maximum segments reached');
+      }
 
-        const switchesLeft = MAX_RESPONSE_SEGMENTS - stream.switches;
+      const switchesLeft = MAX_RESPONSE_SEGMENTS - stream.switches;
 
-        console.log(`Reached max token limit (${MAX_TOKENS}): Continuing message (${switchesLeft} switches left)`);
+      console.log(`Reached max token limit (${MAX_TOKENS}): Continuing message (${switchesLeft} switches left)`);
 
-        messages.push({ role: 'assistant', content });
-        messages.push({ role: 'user', content: CONTINUE_PROMPT });
+      messages.push({ role: 'assistant', content });
+      messages.push({ role: 'user', content: CONTINUE_PROMPT });
 
-        const result = await streamText(messages, context.cloudflare.env, options);
+      const result = await streamTextMultiModel({
+        messages,
+        env: context.cloudflare.env,
+        userId: session.user.id,
+        taskType: 'code_generation',
+        request,
+        enableCache: true,
+        onFinish,
+      });
 
+      if ('toAIStream' in result) {
         return stream.switchSource(result.toAIStream());
-      },
+      }
     };
 
-    const result = await streamText(messages, context.cloudflare.env, options);
+    const result = await streamTextMultiModel({
+      messages,
+      env: context.cloudflare.env,
+      userId: session.user.id,
+      taskType: 'code_generation',
+      request,
+      enableCache: true,
+      onFinish,
+    });
 
-    stream.switchSource(result.toAIStream());
+    if ('wasCached' in result && result.wasCached) {
+      return new Response(result.text, {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/plain; charset=utf-8',
+        },
+      });
+    }
+
+    if ('toAIStream' in result) {
+      stream.switchSource(result.toAIStream());
+    }
 
     return new Response(stream.readable, {
       status: 200,
