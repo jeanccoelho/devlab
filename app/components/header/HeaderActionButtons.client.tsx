@@ -2,17 +2,26 @@ import { useStore } from '@nanostores/react';
 import { chatStore } from '~/lib/stores/chat';
 import { workbenchStore } from '~/lib/stores/workbench';
 import { classNames } from '~/utils/classNames';
+import { zenModeStore, toggleZenMode } from '~/lib/stores/ui';
 
 interface HeaderActionButtonsProps {}
 
 export function HeaderActionButtons({}: HeaderActionButtonsProps) {
   const showWorkbench = useStore(workbenchStore.showWorkbench);
   const { showChat } = useStore(chatStore);
+  const zenMode = useStore(zenModeStore);
 
   const canHideChat = showWorkbench || !showChat;
 
   return (
-    <div className="flex">
+    <div className="flex gap-2">
+      <Button
+        active={zenMode}
+        onClick={toggleZenMode}
+        title="Modo Zen (ocultar elementos laterais)"
+      >
+        <div className={zenMode ? 'i-ph:eye-slash-duotone' : 'i-ph:eye-duotone'} />
+      </Button>
       <div className="flex border border-bolt-elements-borderColor rounded-md overflow-hidden">
         <Button
           active={showChat}
@@ -48,12 +57,13 @@ interface ButtonProps {
   disabled?: boolean;
   children?: any;
   onClick?: VoidFunction;
+  title?: string;
 }
 
-function Button({ active = false, disabled = false, children, onClick }: ButtonProps) {
+function Button({ active = false, disabled = false, children, onClick, title }: ButtonProps) {
   return (
     <button
-      className={classNames('flex items-center p-1.5', {
+      className={classNames('flex items-center p-1.5 rounded-md', {
         'bg-bolt-elements-item-backgroundDefault hover:bg-bolt-elements-item-backgroundActive text-bolt-elements-textTertiary hover:text-bolt-elements-textPrimary':
           !active,
         'bg-bolt-elements-item-backgroundAccent text-bolt-elements-item-contentAccent': active && !disabled,
@@ -61,6 +71,7 @@ function Button({ active = false, disabled = false, children, onClick }: ButtonP
           disabled,
       })}
       onClick={onClick}
+      title={title}
     >
       {children}
     </button>

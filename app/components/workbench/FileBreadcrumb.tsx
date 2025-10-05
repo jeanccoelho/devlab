@@ -69,8 +69,25 @@ export const FileBreadcrumb = memo<FileBreadcrumbProps>(({ files, pathSegments =
     return null;
   }
 
+  const getFileIcon = (filename: string) => {
+    const ext = filename.split('.').pop()?.toLowerCase();
+    const iconMap: Record<string, string> = {
+      'js': 'i-ph:file-js-duotone',
+      'jsx': 'i-ph:file-jsx-duotone',
+      'ts': 'i-ph:file-ts-duotone',
+      'tsx': 'i-ph:file-tsx-duotone',
+      'json': 'i-ph:brackets-curly-duotone',
+      'css': 'i-ph:file-css-duotone',
+      'scss': 'i-ph:file-css-duotone',
+      'html': 'i-ph:file-html-duotone',
+      'md': 'i-ph:file-text-duotone',
+    };
+    return iconMap[ext || ''] || 'i-ph:file-duotone';
+  };
+
   return (
-    <div className="flex">
+    <div className="flex items-center gap-1 bg-bolt-elements-background-depth-2 rounded-md px-2 py-1.5 text-sm">
+      <div className="i-ph:folder-open-duotone text-bolt-elements-textSecondary" />
       {pathSegments.map((segment, index) => {
         const isLast = index === pathSegments.length - 1;
 
@@ -88,14 +105,13 @@ export const FileBreadcrumb = memo<FileBreadcrumbProps>(({ files, pathSegments =
               <DropdownMenu.Trigger asChild>
                 <span
                   ref={(ref) => (segmentRefs.current[index] = ref)}
-                  className={classNames('flex items-center gap-1.5 cursor-pointer shrink-0', {
+                  className={classNames('flex items-center gap-1.5 cursor-pointer shrink-0 px-1.5 py-0.5 rounded hover:bg-bolt-elements-item-backgroundActive transition-colors', {
                     'text-bolt-elements-textTertiary hover:text-bolt-elements-textPrimary': !isActive,
-                    'text-bolt-elements-textPrimary underline': isActive,
-                    'pr-4': isLast,
+                    'text-bolt-elements-textPrimary bg-bolt-elements-item-backgroundAccent': isActive,
                   })}
                   onClick={() => handleSegmentClick(index)}
                 >
-                  {isLast && <div className="i-ph:file-duotone" />}
+                  {isLast && <div className={getFileIcon(segment)} />}
                   {segment}
                 </span>
               </DropdownMenu.Trigger>
