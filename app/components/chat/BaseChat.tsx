@@ -28,11 +28,36 @@ interface BaseChatProps {
 }
 
 const EXAMPLE_PROMPTS = [
-  { text: 'Build a todo app in React using Tailwind' },
-  { text: 'Build a simple blog using Astro' },
-  { text: 'Create a cookie consent form using Material UI' },
-  { text: 'Make a space invaders game' },
-  { text: 'How do I center a div?' },
+  {
+    text: 'Build a todo app in React using Tailwind',
+    icon: 'i-ph:check-square-duotone',
+    category: 'Web App'
+  },
+  {
+    text: 'Build a simple blog using Astro',
+    icon: 'i-ph:article-duotone',
+    category: 'Website'
+  },
+  {
+    text: 'Create a cookie consent form using Material UI',
+    icon: 'i-ph:cookie-duotone',
+    category: 'Component'
+  },
+  {
+    text: 'Make a space invaders game',
+    icon: 'i-ph:game-controller-duotone',
+    category: 'Game'
+  },
+  {
+    text: 'Build a weather dashboard with charts',
+    icon: 'i-ph:cloud-sun-duotone',
+    category: 'Dashboard'
+  },
+  {
+    text: 'Create a landing page for a SaaS product',
+    icon: 'i-ph:rocket-launch-duotone',
+    category: 'Marketing'
+  },
 ];
 
 const TEXTAREA_MIN_HEIGHT = 76;
@@ -185,8 +210,12 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
               </div>
             </div>
             {!chatStarted && (
-              <div id="examples" className="relative w-full max-w-xl mx-auto mt-8 flex justify-center">
-                <div className="flex flex-col space-y-2 [mask-image:linear-gradient(to_bottom,black_0%,transparent_180%)] hover:[mask-image:none]">
+              <div id="examples" className="relative w-full max-w-4xl mx-auto mt-8 px-6">
+                <div className="text-center mb-6">
+                  <h2 className="text-lg font-semibold text-bolt-elements-textPrimary mb-2">Exemplos Populares</h2>
+                  <p className="text-sm text-bolt-elements-textSecondary">Clique em um exemplo para começar rapidamente</p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 [mask-image:linear-gradient(to_bottom,black_60%,transparent_100%)] hover:[mask-image:none] transition-all duration-300">
                   {EXAMPLE_PROMPTS.map((examplePrompt, index) => {
                     return (
                       <button
@@ -194,10 +223,16 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                         onClick={(event) => {
                           sendMessage?.(event, examplePrompt.text);
                         }}
-                        className="group flex items-center w-full gap-2 justify-center bg-transparent text-bolt-elements-textTertiary hover:text-bolt-elements-textPrimary transition-theme"
+                        className="group flex items-start gap-3 p-4 rounded-lg bg-bolt-elements-background-depth-2 border border-bolt-elements-borderColor hover:border-bolt-elements-borderColorActive hover:bg-bolt-elements-item-backgroundAccent transition-all duration-200 text-left"
                       >
-                        {examplePrompt.text}
-                        <div className="i-ph:arrow-bend-down-left" />
+                        <div className={classNames(examplePrompt.icon, 'text-2xl text-bolt-elements-textSecondary group-hover:text-bolt-elements-item-contentAccent transition-colors flex-shrink-0 mt-0.5')} />
+                        <div className="flex-1 min-w-0">
+                          <div className="text-xs font-medium text-bolt-elements-textTertiary mb-1">{examplePrompt.category}</div>
+                          <div className="text-sm text-bolt-elements-textPrimary group-hover:text-bolt-elements-item-contentAccent transition-colors">
+                            {examplePrompt.text}
+                          </div>
+                        </div>
+                        <div className="i-ph:arrow-right text-bolt-elements-textTertiary group-hover:text-bolt-elements-item-contentAccent opacity-0 group-hover:opacity-100 transition-all flex-shrink-0 mt-1" />
                       </button>
                     );
                   })}

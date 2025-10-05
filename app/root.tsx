@@ -8,6 +8,7 @@ import { createHead } from 'remix-island';
 import { useEffect } from 'react';
 import { ToastContainer } from 'react-toastify';
 import { AuthProvider } from './contexts/AuthContext';
+import { KeyboardShortcutsModal } from './components/ui/KeyboardShortcutsModal';
 
 import reactToastifyStyles from 'react-toastify/dist/ReactToastify.css?url';
 import globalStyles from './styles/index.scss?url';
@@ -84,6 +85,7 @@ export default function App() {
   return (
     <AuthProvider>
       <Outlet />
+      <KeyboardShortcutsModal />
       <ToastContainer
         position="top-right"
         autoClose={3000}
