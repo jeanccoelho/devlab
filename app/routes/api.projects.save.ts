@@ -46,7 +46,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
         const { data, error } = await supabase
           .from('projects')
-          .update(updateData)
+          .update(updateData as never)
           .eq('id', projectId)
           .eq('user_id', user.user.id)
           .select()
@@ -70,7 +70,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
     const { data, error } = await supabase
       .from('projects')
-      .insert(insertData)
+      .insert(insertData as never)
       .select()
       .maybeSingle();
 
