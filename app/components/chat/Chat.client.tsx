@@ -78,41 +78,38 @@ export const ChatImpl = memo(({ initialMessages, storeMessageHistory }: ChatProp
 
   const [animationScope, animate] = useAnimate();
 
-  const getHeaders = async (): Promise<Record<string, string>> => {
+  const customFetch = async (input: RequestInfo | URL, init?: RequestInit) => {
     try {
       const { data: { session }, error } = await supabase.auth.getSession();
 
       if (error) {
         logger.error('Error getting session:', error);
-        return {
-          'Content-Type': 'application/json',
-        };
       }
+
+      const headers = new Headers(init?.headers);
+      headers.set('Content-Type', 'application/json');
 
       if (session?.access_token) {
         logger.debug('Sending request with auth token');
-        return {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json',
-        };
+        headers.set('Authorization', `Bearer ${session.access_token}`);
+      } else {
+        logger.warn('No session found, sending request without auth');
       }
 
-      logger.warn('No session found, sending request without auth');
-      return {
-        'Content-Type': 'application/json',
-      };
+      return fetch(input, {
+        ...init,
+        headers,
+      });
     } catch (err) {
-      logger.error('Error in headers function:', err);
-      return {
-        'Content-Type': 'application/json',
-      };
+      logger.error('Error in custom fetch:', err);
+      return fetch(input, init);
     }
   };
 
   const { messages, isLoading, input, handleInputChange, setInput, stop, append } = useChat({
     api: '/api/chat',
     credentials: 'include',
-    headers: getHeaders as any,
+    fetch: customFetch,
     onError: (error) => {
       logger.error('Request failed\n\n', error);
 
