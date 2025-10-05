@@ -7,6 +7,9 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig((config) => {
   return {
+    resolve: {
+      dedupe: ['react', 'react-dom'],
+    },
     build: {
       target: 'esnext',
       chunkSizeWarningLimit: 1000,
