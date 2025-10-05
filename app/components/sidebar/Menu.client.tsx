@@ -9,6 +9,9 @@ import { cubicEasingFn } from '~/utils/easings';
 import { logger } from '~/utils/logger';
 import { HistoryItem } from './HistoryItem';
 import { binDates } from './date-binning';
+import { useFavorites } from '~/lib/hooks/useFavorites';
+import { useStore } from '@nanostores/react';
+import { zenModeStore } from '~/lib/stores/ui';
 
 const menuVariants = {
   closed: {
@@ -38,6 +41,8 @@ export function Menu() {
   const [list, setList] = useState<ChatHistoryItem[]>([]);
   const [open, setOpen] = useState(false);
   const [dialogContent, setDialogContent] = useState<DialogContent>(null);
+  const { favorites } = useFavorites();
+  const zenMode = useStore(zenModeStore);
 
   const loadEntries = useCallback(() => {
     if (db) {
@@ -103,7 +108,7 @@ export function Menu() {
     <motion.div
       ref={menuRef}
       initial="closed"
-      animate={open ? 'open' : 'closed'}
+      animate={open && !zenMode ? 'open' : 'closed'}
       variants={menuVariants}
       className="flex flex-col side-menu fixed top-0 w-[350px] h-full bg-bolt-elements-background-depth-2 border-r rounded-r-3xl border-bolt-elements-borderColor z-sidebar shadow-xl shadow-bolt-elements-sidebar-dropdownShadow text-sm"
     >
@@ -118,9 +123,25 @@ export function Menu() {
             Start new chat
           </a>
         </div>
-        <div className="text-bolt-elements-textPrimary font-medium pl-6 pr-5 my-2">Your Chats</div>
+        {favorites.length > 0 && (
+          <div className="px-4 pb-3 border-b border-bolt-elements-borderColor">
+            <div className="text-bolt-elements-textPrimary font-medium mb-2 flex items-center gap-2">
+              <span className="i-ph:star-fill text-yellow-500" />
+              Favoritos
+            </div>
+            <div className="space-y-1">
+              {favorites.slice(0, 5).map((fav) => {
+                const item = list.find(i => i.id === fav.chat_id);
+                return item ? (
+                  <HistoryItem key={fav.id} item={item} onDelete={() => setDialogContent({ type: 'delete', item })} />
+                ) : null;
+              })}
+            </div>
+          </div>
+        )}
+        <div className="text-bolt-elements-textPrimary font-medium pl-6 pr-5 my-2">Suas Conversas</div>
         <div className="flex-1 overflow-scroll pl-4 pr-5 pb-5">
-          {list.length === 0 && <div className="pl-2 text-bolt-elements-textTertiary">No previous conversations</div>}
+          {list.length === 0 && <div className="pl-2 text-bolt-elements-textTertiary">Nenhuma conversa anterior</div>}
           <DialogRoot open={dialogContent !== null}>
             {binDates(list).map(({ category, items }) => (
               <div key={category} className="mt-4 first:mt-0 space-y-1">

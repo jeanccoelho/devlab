@@ -1,6 +1,7 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import { useEffect, useRef, useState } from 'react';
 import { type ChatHistoryItem } from '~/lib/persistence';
+import { useFavorites } from '~/lib/hooks/useFavorites';
 
 interface HistoryItemProps {
   item: ChatHistoryItem;
@@ -10,6 +11,8 @@ interface HistoryItemProps {
 export function HistoryItem({ item, onDelete }: HistoryItemProps) {
   const [hovering, setHovering] = useState(false);
   const hoverRef = useRef<HTMLDivElement>(null);
+  const { isFavorite, addFavorite, removeFavorite } = useFavorites();
+  const favorite = isFavorite(item.id);
 
   useEffect(() => {
     let timeout: NodeJS.Timeout | undefined;
@@ -42,17 +45,29 @@ export function HistoryItem({ item, onDelete }: HistoryItemProps) {
     >
       <a href={`/chat/${item.urlId}`} className="flex w-full relative truncate block">
         {item.description}
-        <div className="absolute right-0 z-1 top-0 bottom-0 bg-gradient-to-l from-bolt-elements-background-depth-2 group-hover:from-bolt-elements-background-depth-3 to-transparent w-10 flex justify-end group-hover:w-15 group-hover:from-45%">
+        <div className="absolute right-0 z-1 top-0 bottom-0 bg-gradient-to-l from-bolt-elements-background-depth-2 group-hover:from-bolt-elements-background-depth-3 to-transparent w-10 flex justify-end group-hover:w-20 group-hover:from-45%">
           {hovering && (
-            <div className="flex items-center p-1 text-bolt-elements-textSecondary hover:text-bolt-elements-item-contentDanger">
+            <div className="flex items-center gap-1 p-1">
+              <button
+                className={favorite ? 'i-ph:star-fill text-yellow-500' : 'i-ph:star text-bolt-elements-textSecondary hover:text-yellow-500'}
+                onClick={(event) => {
+                  event.preventDefault();
+                  if (favorite) {
+                    removeFavorite(item.id);
+                  } else {
+                    addFavorite(item.id, item.description || 'Chat sem título');
+                  }
+                }}
+                title={favorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
+              />
               <Dialog.Trigger asChild>
                 <button
-                  className="i-ph:trash scale-110"
+                  className="i-ph:trash scale-110 text-bolt-elements-textSecondary hover:text-bolt-elements-item-contentDanger"
                   onClick={(event) => {
-                    // we prevent the default so we don't trigger the anchor above
                     event.preventDefault();
                     onDelete?.(event);
                   }}
+                  title="Deletar conversa"
                 />
               </Dialog.Trigger>
             </div>
