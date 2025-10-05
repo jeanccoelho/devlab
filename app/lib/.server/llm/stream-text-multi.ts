@@ -48,8 +48,8 @@ export async function streamTextMultiModel(options: StreamTextOptions) {
   const modelProvider = createMultiModelProvider(env);
 
   let selectedModel = null;
-  let modelInfo = null;
-  let providerInfo = null;
+  let modelInfo: { id: string; model_id: string; max_tokens: number; provider_id: string } | null = null;
+  let providerInfo: { id: string; name: string } | null = null;
   const startTime = Date.now();
 
   if (aiManager && userId) {
@@ -94,7 +94,7 @@ export async function streamTextMultiModel(options: StreamTextOptions) {
 
     if (modelInfo) {
       const providers = await aiManager.getAvailableProviders();
-      providerInfo = providers.find((p) => p.id === modelInfo.provider_id);
+      providerInfo = providers.find((p) => p.id === modelInfo!.provider_id) || null;
 
       if (providerInfo) {
         const modelResult = await modelProvider.selectModelWithFallback(

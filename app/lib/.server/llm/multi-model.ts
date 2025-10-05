@@ -2,7 +2,7 @@ import { createAnthropic } from '@ai-sdk/anthropic';
 import { createOpenAI } from '@ai-sdk/openai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { createMistral } from '@ai-sdk/mistral';
-import type { LanguageModel } from 'ai';
+import type { LanguageModelV1 } from '@ai-sdk/provider';
 
 export interface ModelProviderConfig {
   provider: string;
@@ -45,19 +45,19 @@ export class MultiModelProvider {
     }
   }
 
-  getModel(provider: string, modelId: string): LanguageModel | null {
+  getModel(provider: string, modelId: string): LanguageModelV1 | null {
     switch (provider) {
       case 'anthropic':
-        return this.anthropic ? this.anthropic(modelId) : null;
+        return this.anthropic ? this.anthropic(modelId) as any as LanguageModelV1 : null;
 
       case 'openai':
-        return this.openai ? this.openai(modelId) : null;
+        return this.openai ? this.openai(modelId) as any as LanguageModelV1 : null;
 
       case 'google':
-        return this.google ? this.google(modelId) : null;
+        return this.google ? this.google(modelId) as any as LanguageModelV1 : null;
 
       case 'mistral':
-        return this.mistral ? this.mistral(modelId) : null;
+        return this.mistral ? this.mistral(modelId) as any as LanguageModelV1 : null;
 
       default:
         console.warn(`Unknown provider: ${provider}`);
@@ -95,7 +95,7 @@ export class MultiModelProvider {
     primaryProvider: string,
     primaryModelId: string,
     fallbackProviders: Array<{ provider: string; modelId: string }>
-  ): Promise<{ model: LanguageModel; provider: string; modelId: string; usedFallback: boolean } | null> {
+  ): Promise<{ model: LanguageModelV1; provider: string; modelId: string; usedFallback: boolean } | null> {
     const primaryModel = this.getModel(primaryProvider, primaryModelId);
 
     if (primaryModel && this.isProviderAvailable(primaryProvider)) {

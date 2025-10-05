@@ -51,6 +51,7 @@ export function useFavorites() {
       const { error } = await supabase
         .from('chat_favorites')
         .insert({
+          user_id: session.user.id,
           chat_id: chatId,
           title: title,
         });
