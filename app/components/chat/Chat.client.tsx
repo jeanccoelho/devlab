@@ -5,7 +5,7 @@ import { useAnimate } from 'framer-motion';
 import { memo, useEffect, useRef, useState } from 'react';
 import { useNavigate } from '@remix-run/react';
 import { cssTransition, toast, ToastContainer } from 'react-toastify';
-import { useMessageParser, usePromptEnhancer, useShortcuts, useSnapScroll } from '~/lib/hooks';
+import { useMessageParser, usePromptEnhancer, useShortcuts, useSnapScroll, useTokenBalance } from '~/lib/hooks';
 import { useChatHistory } from '~/lib/persistence';
 import { chatStore } from '~/lib/stores/chat';
 import { workbenchStore } from '~/lib/stores/workbench';
@@ -68,6 +68,7 @@ interface ChatProps {
 
 export const ChatImpl = memo(({ initialMessages, storeMessageHistory }: ChatProps) => {
   useShortcuts();
+  useTokenBalance();
   const navigate = useNavigate();
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -94,6 +95,9 @@ export const ChatImpl = memo(({ initialMessages, storeMessageHistory }: ChatProp
         headers.set('Authorization', `Bearer ${session.access_token}`);
       } else {
         logger.warn('No session found, sending request without auth');
+        toast.error('Sessão expirada. Redirecionando para login...');
+        setTimeout(() => navigate('/login'), 1500);
+        throw new Error('No session');
       }
 
       return fetch(input, {
@@ -102,7 +106,7 @@ export const ChatImpl = memo(({ initialMessages, storeMessageHistory }: ChatProp
       });
     } catch (err) {
       logger.error('Error in custom fetch:', err);
-      return fetch(input, init);
+      throw err;
     }
   };
 
@@ -113,15 +117,27 @@ export const ChatImpl = memo(({ initialMessages, storeMessageHistory }: ChatProp
     onError: (error) => {
       logger.error('Request failed\n\n', error);
 
-      if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
-        toast.error('Sessão expirada. Por favor, faça login novamente.');
+      if (error.message?.includes('401') || error.message?.includes('Unauthorized') || error.message?.includes('No session')) {
+        toast.error('Sessão expirada. Redirecionando para login...', { autoClose: 2000 });
         setTimeout(() => {
           navigate('/login');
-        }, 1500);
-      } else if (error.message?.includes('402')) {
-        toast.error('Saldo de tokens insuficiente. Por favor, adquira mais tokens.');
+        }, 2000);
+      } else if (error.message?.includes('402') || error.message?.includes('Saldo de tokens insuficiente')) {
+        toast.error(
+          <div>
+            <strong className="block mb-1">Saldo insuficiente</strong>
+            <p className="text-xs mb-2 opacity-90">Você precisa de mais tokens para continuar.</p>
+            <button
+              onClick={() => navigate('/dashboard/tokens')}
+              className="px-3 py-1.5 bg-white text-red-600 rounded text-xs font-medium hover:bg-gray-100 transition-colors"
+            >
+              Comprar Tokens
+            </button>
+          </div>,
+          { autoClose: 8000 }
+        );
       } else {
-        toast.error('Erro ao processar sua solicitação');
+        toast.error('Erro ao processar sua solicitação. Tente novamente.');
       }
     },
     onFinish: () => {
