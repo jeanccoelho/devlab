@@ -23,8 +23,9 @@ export function useFavorites() {
         return;
       }
 
-      const { data, error } = await supabase
-        .from('chat_favorites')
+      // Type assertion necessária devido à regeneração de tipos do Supabase em ambiente local
+      const { data, error } = await (supabase
+        .from('chat_favorites') as any)
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -48,8 +49,8 @@ export function useFavorites() {
         return false;
       }
 
-      const { error } = await supabase
-        .from('chat_favorites')
+      const { error } = await (supabase
+        .from('chat_favorites') as any)
         .insert({
           user_id: session.user.id,
           chat_id: chatId,
@@ -76,8 +77,8 @@ export function useFavorites() {
 
   const removeFavorite = useCallback(async (chatId: string) => {
     try {
-      const { error } = await supabase
-        .from('chat_favorites')
+      const { error } = await (supabase
+        .from('chat_favorites') as any)
         .delete()
         .eq('chat_id', chatId);
 
