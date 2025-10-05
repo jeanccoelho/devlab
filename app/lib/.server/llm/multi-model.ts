@@ -2,7 +2,7 @@ import { createAnthropic } from '@ai-sdk/anthropic';
 import { createOpenAI } from '@ai-sdk/openai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { createMistral } from '@ai-sdk/mistral';
-import type { LanguageModelV1 } from '@ai-sdk/provider';
+import type { LanguageModelV1 } from 'ai';
 
 export interface ModelProviderConfig {
   provider: string;

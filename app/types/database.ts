@@ -280,6 +280,32 @@ export type Database = {
           created_at?: string;
         };
       };
+      chat_favorites: {
+        Row: {
+          id: string;
+          user_id: string;
+          chat_id: string;
+          title: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          chat_id: string;
+          title: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          chat_id?: string;
+          title?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     };
     Functions: {
       consume_tokens: {
